@@ -1,0 +1,26 @@
+La política de redondeos del dominio es:
+- Money admite importes con su resolución decimal original, sin exigir dos decimales
+- Al hacer operaciones con la calculadora: 
+	- Las sumas, restas y multiplicaciones son exactas (no generan infinitos decimales), sin redondeos intermedios
+	- Las divisiones finitas son exactas
+	- Las divisiones no terminantes usan DECIMAL128: 34 dígitos significativos y HALF_EVEN
+- Si se necesita resultado exacto (con todos los decimales que haya) se materializan con toMoneyExact()
+- Solo se redondea a dos decimales en fronteras contables explícitas mediante toMoneyRoundedToCents()
+- El modo de redondeo contable predeterminado es HALF_EVEN
+
+- Son fronteras contables:
+  - Aprobación de una orden de trabajo
+  - Importes neto, IVA y bruto de una factura
+  - Cargos y pagos
+  - Acumulados y saldos de medios de pago
+  - Cualquier otro total definitivamente liquidable
+  
+- allocate() redondea primero el importe a céntimos con HALF_EVEN y después lo reparte sin pérdida, tanto para positivos como para negativos
+
+- La persistencia conserva:
+  - Precisión 19 
+  - Escala 2
+  
+- La base de datos no debe decidir el redondeo: el importe llega ya normalizado desde el dominio
+
+En resumen: precisión completa durante el cálculo y redondeo a céntimos únicamente cuando el importe se convierte en una obligación contable definitiva.
