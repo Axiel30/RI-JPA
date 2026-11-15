@@ -1,19 +1,38 @@
 package uo.ri.cws.domain;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.util.assertion.ArgumentChecks;
 import uo.ri.util.assertion.StateChecks;
 
-public class Charge {
+@Entity
+@Table(name = "TCHARGES", uniqueConstraints = { @UniqueConstraint(columnNames = { "INVOICE_ID", "PAYMENTMEAN_ID" }) })
+public class Charge extends BaseEntity {
 
 	// Natural attributes
+	@Embedded
+	@AttributeOverride(name = "amount", column = @Column(name = "CHARGE", precision = 19, scale = 2))
     private Money amount; // cents
 
     // Accidental attributes
+	@ManyToOne
+	@JoinColumn(name = "INVOICE_ID")
     private Invoice invoice;
+
+	@ManyToOne
+	@JoinColumn(name = "PAYMENTMEAN_ID")
     private PaymentMean paymentMean;
 
     // ------ Constructors -----
+    protected Charge() {}
     
     /* package */ Charge(Invoice invoice, PaymentMean paymentMean, Money amount) {
     	ArgumentChecks.isNotNull(invoice, "Invoice cannot be null");

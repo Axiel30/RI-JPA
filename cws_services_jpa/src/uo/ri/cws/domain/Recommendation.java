@@ -1,20 +1,36 @@
 package uo.ri.cws.domain;
 
-import java.util.Objects;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.util.assertion.ArgumentChecks;
 import uo.ri.util.assertion.StateChecks;
 
-public class Recommendation {
+@Entity
+@Table(name = "TRECOMMENDATIONS", uniqueConstraints = { @UniqueConstraint(columnNames = { "RECOMMENDER_ID", "RECOMMENDED_ID" }) })
+public class Recommendation extends BaseEntity {
 
 	// Natural attributes
+	@Column(name = "USEDFORVOUCHER")
 	private boolean usedForVoucher = false;
 
 	// Accidental attributes
+	@ManyToOne
+	@JoinColumn(name = "RECOMMENDER_ID")
 	private Client recommender;
+
+	@OneToOne
+	@JoinColumn(name = "RECOMMENDED_ID", unique = true)
 	private Client recommended;
 
 	// ---- Constructors ----
+	protected Recommendation() {}
+
 	public Recommendation(Client recommender, Client recommended) {
 		ArgumentChecks.isNotNull(recommender, "Recommender must not be null");
 		ArgumentChecks.isNotNull(recommended, "Recommended client must not be null");
@@ -49,19 +65,6 @@ public class Recommendation {
 
 	void _setRecommended(Client recommended) {
 		this.recommended = recommended;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null || getClass() != obj.getClass()) return false;
-		Recommendation other = (Recommendation) obj;
-		return Objects.equals(recommender, other.recommender) && Objects.equals(recommended, other.recommended);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(recommender, recommended);
 	}
 
 	@Override

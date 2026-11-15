@@ -20,6 +20,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>uo.ri</groupId>
+			<artifactId>cws_service_interfaces</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>uo.ri</groupId>
 			<artifactId>cws_util</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
@@ -65,7 +71,7 @@
 				<version>3.4.0</version>
 				<executions>
 					<execution>
-						<id>add-test-extended</id>
+						<id>add-test-source</id>
 						<phase>generate-test-sources</phase>
 						<goals>
 							<goal>add-test-source</goal>

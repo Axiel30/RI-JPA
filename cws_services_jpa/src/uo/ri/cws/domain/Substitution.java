@@ -1,7 +1,14 @@
 package uo.ri.cws.domain;
 
-import java.util.Objects;
-
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.util.assertion.ArgumentChecks;
 
@@ -11,17 +18,29 @@ import uo.ri.util.assertion.ArgumentChecks;
  * 
  * Internal aggregate class of WorkOrder. Only Intervention can create Substitutions (through WorkOrder).
  */
-public class Substitution {
+@Entity
+@Table(name = "TSUBSTITUTIONS", uniqueConstraints = { @UniqueConstraint(columnNames = { "INTERVENTION_ID", "SPAREPART_ID" }) })
+public class Substitution extends BaseEntity {
 	// Natural attributes
+	@Embedded
+	@AttributeOverride(name = "amount", column = @Column(name = "PRICE", precision = 19, scale = 2))
     private Money price;
+
+	@Column(name = "QUANTITY")
 	private int quantity;
 
 	// Accidental attributes
+	@ManyToOne
+	@JoinColumn(name = "SPAREPART_ID")
 	private SparePart sparePart;
+
+	@ManyToOne
+	@JoinColumn(name = "INTERVENTION_ID")
 	private Intervention intervention;
     
-
 	// ---------------------------- Constructors -----------------------------
+	protected Substitution() {}
+
 	/**
 	 * Package-private constructor to create a new Substitution with the given parameters.
 	 * Only Intervention can create Substitutions.
@@ -68,19 +87,6 @@ public class Substitution {
 	// ---------------------------- Business methods -----------------------------
 	public Money getTotalAmount() {
 		return Money.calc(price).times(quantity).toMoneyRoundedToCents();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null || getClass() != obj.getClass()) return false;
-		Substitution other = (Substitution) obj;
-		return Objects.equals(sparePart, other.sparePart) && Objects.equals(intervention, other.intervention);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(sparePart, intervention);
 	}
 
 }

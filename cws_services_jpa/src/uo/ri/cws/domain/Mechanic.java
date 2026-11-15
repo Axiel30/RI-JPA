@@ -1,23 +1,40 @@
 package uo.ri.cws.domain;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.cws.domain.types.FullName;
 import uo.ri.cws.domain.types.Nif;
 import uo.ri.util.assertion.ArgumentChecks;
 
-public class Mechanic {
+@Entity
+@Table(name = "TMECHANICS")
+public class Mechanic extends BaseEntity {
 
 	// Natural attributes
+	@Embedded
+	@AttributeOverride(name = "nif", column = @Column(name = "NIF", unique = true))
 	private Nif nif;
+
+	@Embedded
+	@AttributeOverride(name = "name", column = @Column(name = "NAME"))
+	@AttributeOverride(name = "surname", column = @Column(name = "SURNAME"))
 	private FullName fullName;
 
 	// Accidental attributes
+	@OneToMany(mappedBy = "mechanic")
 	private Set<WorkOrder> assigned = new HashSet<>();
 	
 	// ---- Constructors ----
+	protected Mechanic() {}
+
 	public Mechanic(Nif nif) {
 		this(nif, new FullName("No name", "No surname"));
 	}
@@ -38,23 +55,9 @@ public class Mechanic {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null || getClass() != obj.getClass()) return false;
-		Mechanic other = (Mechanic) obj;
-		return Objects.equals(nif, other.nif);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(nif);
-	}
-
-	@Override
 	public String toString() {
 		return "Mechanic[nif=" + nif + ", name=" + fullName + "]";
 	}
-
 
 	// ---- Setters (optional, controlled) ----
 

@@ -1,0 +1,38 @@
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+                                 https://jakarta.ee/xml/ns/persistence/persistence_3_2.xsd"
+             version="3.2">
+
+    <persistence-unit name="carworkshop">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <mapping-file>META-INF/orm.xml</mapping-file>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        <shared-cache-mode>NONE</shared-cache-mode>
+
+		<properties>
+
+		<!-- 
+			<property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
+		-->
+
+			<property name="eclipselink.logging.level.sql" value="FINE"/>
+            <property name="eclipselink.logging.level" value="INFO" />
+            <property name="eclipselink.logging.cache" value="OFF" />
+            <property name="eclipselink.logging.parameters" value="true" />
+			<property name="eclipselink.logging.file" value="eclipselink.log"/>
+
+			<property name="jakarta.persistence.jdbc.url" value="jdbc:hsqldb:file:../cws_database/test;files_readonly=true"/>
+<!-- 
+			<property name="jakarta.persistence.jdbc.url" value="jdbc:hsqldb:hsql://localhost" />
+ 			<property name="jakarta.persistence.jdbc.url" value="jdbc:hsqldb:file:../cws_database/test;files_readonly=true"/>
+ 			<property name="jakarta.persistence.jdbc.url" value="jdbc:hsqldb:file:../cws_database/test"/> For generating database cannot be readonly Only for staff purposes
+			<property name="jakarta.persistence.jdbc.url" value="jdbc:hsqldb:mem:test" />
+-->
+			<property name="jakarta.persistence.jdbc.driver" value="org.hsqldb.jdbcDriver" />
+			<property name="jakarta.persistence.jdbc.user" value="sa" />
+			<property name="jakarta.persistence.jdbc.password" value="" />
+		</properties>
+	</persistence-unit>
+
+</persistence>

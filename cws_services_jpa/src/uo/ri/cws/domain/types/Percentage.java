@@ -2,8 +2,10 @@ package uo.ri.cws.domain.types;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.Embeddable;
 import uo.ri.util.assertion.ArgumentChecks;
 
+@Embeddable
 public record Percentage(
 		BigDecimal value
 	) {

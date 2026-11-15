@@ -1,7 +1,9 @@
 package uo.ri.cws.domain.types;
 
+import jakarta.persistence.Embeddable;
 import uo.ri.util.assertion.ArgumentChecks;
 
+@Embeddable
 public record VoucherCode(
 		String code
 	) {

@@ -5,253 +5,281 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.cws.domain.types.Percentage;
 import uo.ri.util.assertion.ArgumentChecks;
 import uo.ri.util.assertion.StateChecks;
 
-public class Invoice {
-	private static final LocalDate JULY_1_2012 = LocalDate.of(2012, 7, 1);
+@Entity
+@Table(name = "TINVOICES")
+public class Invoice extends BaseEntity {
+    private static final LocalDate JULY_1_2012 = LocalDate.of(2012, 7, 1);
 
-	public enum InvoiceState {
-		ISSUED, PAID
-	}
+    public enum InvoiceState {
+        ISSUED, PAID
+    }
 
-	// Natural attributes
-	private long number;
-	private LocalDate date;
-	private InvoiceState state = InvoiceState.ISSUED;
+    // Natural attributes
+    @Column(name = "NUMBER", unique = true)
+    private long number;
 
-	/*
-	 * Subtotal amount of the invoice, before applying VAT. This represents the taxable base.
-	 */
-	private Money subtotal = Money.ZERO;  // cents
+    @Column(name = "DATE")
+    private LocalDate date;
 
-	/*
-	 * VAT rate applied to the invoice, expressed as a percentage. Example: 21% VAT.
-	 */
-	private Percentage vatRate = Percentage.ofPercent(21);  // default to 21%
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATE")
+    private InvoiceState state = InvoiceState.ISSUED;
 
-	/*
-	 * VAT amount calculated from the subtotal amount. This is the tax the customer must pay.
-	 */
-	private Money vatAmount = Money.ZERO;  // cents
+    /*
+     * Subtotal amount of the invoice, before applying VAT. This represents the
+     * taxable base.
+     */
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "SUBTOTAL", precision = 19, scale = 2))
+    private Money subtotal = Money.ZERO; // cents
 
-	/*
-	 * Total amount of the invoice including VAT. This is the final amount the customer must pay.
-	 */
-	private Money total = Money.ZERO; // cents
+    /*
+     * VAT rate applied to the invoice, expressed as a percentage. Example: 21% VAT.
+     */
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "VATRATE"))
+    private Percentage vatRate = Percentage.ofPercent(21); // default to 21%
 
-	private boolean usedForVoucher = false;
+    /*
+     * VAT amount calculated from the subtotal amount. This is the tax the customer
+     * must pay.
+     */
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "VATAMOUNT", precision = 19, scale = 2))
+    private Money vatAmount = Money.ZERO; // cents
 
-	// Accidental attributes
-	private Set<WorkOrder> workOrders = new HashSet<>();
-	private Set<Charge> charges = new HashSet<>();
+    /*
+     * Total amount of the invoice including VAT. This is the final amount the
+     * customer must pay.
+     */
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "TOTAL", precision = 19, scale = 2))
+    private Money total = Money.ZERO; // cents
 
-	// ----------------- Constructors -------------------------------------
-	
-	public Invoice(long number) {
-		this(number, LocalDate.now(), List.of());
-	}
+    @Column(name = "USEDFORVOUCHER")
+    private boolean usedForVoucher = false;
 
-	public Invoice(long number, LocalDate date) {
-		this(number, date, List.of());
-	}
+    // Accidental attributes
+    @OneToMany(mappedBy = "invoice")
+    private Set<WorkOrder> workOrders = new HashSet<>();
 
-	public Invoice(long number, List<WorkOrder> workOrders) {
-		this(number, LocalDate.now(), workOrders);
-	}
+    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Charge> charges = new HashSet<>();
 
-	public Invoice(long number, LocalDate date, List<WorkOrder> workOrders) {
-		ArgumentChecks.isNotNull(date, "Date must not be null");
-		ArgumentChecks.isNotNull(workOrders, "Work orders list must not be null");
-		for (WorkOrder wo : workOrders) {
-			ArgumentChecks.isNotNull(wo, "Work order cannot be null");
-			StateChecks.isTrue(wo.isApproved(), "Work order must be approved");
-		}
-		this.number = number;
-		this.date = date;
-		this.vatRate = getApplicableVatRate();
-		workOrders.forEach(this::addWorkOrder);
-	}
+    // ----------------- Constructors -------------------------------------
+    protected Invoice() {
+    }
 
-	// ---- Getters ----
-	public long getNumber() {
-		return number;
-	}
+    public Invoice(long number) {
+        this(number, LocalDate.now(), List.of());
+    }
 
-	public LocalDate getDate() {
-		return date;
-	}
+    public Invoice(long number, LocalDate date) {
+        this(number, date, List.of());
+    }
 
-	public InvoiceState getState() {
-		return state;
-	}
+    public Invoice(long number, List<WorkOrder> workOrders) {
+        this(number, LocalDate.now(), workOrders);
+    }
 
-	public Money getSubtotal() {
-		return subtotal;
-	}
+    public Invoice(long number, LocalDate date, List<WorkOrder> workOrders) {
+        ArgumentChecks.isNotNull(date, "Date must not be null");
+        ArgumentChecks.isNotNull(workOrders, "Work orders list must not be null");
+        for (WorkOrder wo : workOrders) {
+            ArgumentChecks.isNotNull(wo, "Work order cannot be null");
+            StateChecks.isTrue(wo.isApproved(), "Work order must be approved");
+        }
+        this.number = number;
+        this.date = date;
+        this.vatRate = getApplicableVatRate();
+        workOrders.forEach(this::addWorkOrder);
+    }
 
-	public Percentage getVatRate() {
-		return vatRate;
-	}
+    // ---- Getters ----
+    public long getNumber() {
+        return number;
+    }
 
-	public Percentage getApplicableVatRate() {
-		return date.isAfter(JULY_1_2012) ? Percentage.ofPercent(21) : Percentage.ofPercent(18);
-	}
+    public LocalDate getDate() {
+        return date;
+    }
 
-	public Money getVatAmount() {
-		return vatAmount;
-	}
+    public InvoiceState getState() {
+        return state;
+    }
 
-	public Money getTotal() {
-		return total;
-	}
+    public Money getSubtotal() {
+        return subtotal;
+    }
 
-	public boolean isUsedForVoucher() {
-		return usedForVoucher;
-	}
+    public Percentage getVatRate() {
+        return vatRate;
+    }
 
-	public void markAsUsedForVoucher() {
-		this.usedForVoucher = true;
-	}
+    public Percentage getApplicableVatRate() {
+        return date.isAfter(JULY_1_2012) ? Percentage.ofPercent(21) : Percentage.ofPercent(18);
+    }
 
-	public boolean canGenerateVoucher30() {
-		return isSettled() && !isUsedForVoucher() && total.greaterThan(Money.of("500.00"));
-	}
+    public Money getVatAmount() {
+        return vatAmount;
+    }
 
-	public Set<WorkOrder> getWorkOrders() {
-		return new HashSet<>(workOrders);
-	}
+    public Money getTotal() {
+        return total;
+    }
 
-	public Set<Charge> getCharges() {
-		return new HashSet<>(charges);
-	}
+    public boolean isUsedForVoucher() {
+        return usedForVoucher;
+    }
 
-	// ------------------ Association helpers (package-private) --------------------------
-	
-	Set<WorkOrder> _getWorkOrders() {
-		return workOrders;
-	}
+    public void markAsUsedForVoucher() {
+        this.usedForVoucher = true;
+    }
 
-	Set<Charge> _getCharges() {
-		return charges;
-	}
+    public boolean canGenerateVoucher30() {
+        return isSettled() && !isUsedForVoucher() && total.greaterThan(Money.of("500.00"));
+    }
 
-	// ---- Business methods --------------------------------------------
-	
-	/**
-	 * Adds a work order to the invoice. The work order must be approved and the invoice must not be settled.
-	 * @param workOrder
-	 */
-	public void addWorkOrder(WorkOrder workOrder) {
-		ArgumentChecks.isNotNull(workOrder, "Work order cannot be null");
-		StateChecks.isFalse(isSettled(), "Invoice is already settled");
-		StateChecks.isTrue(workOrder.isApproved(), "Work order must be approved");
-		Associations.Bills.link(this, workOrder);
-		workOrder.invoice();
-		computeAmount();
-	}
+    public Set<WorkOrder> getWorkOrders() {
+        return new HashSet<>(workOrders);
+    }
 
-	/**
-	 * Removes a work order from the invoice. The invoice must not be settled.
-	 * @param workOrder
-	 */
-	public void removeWorkOrder(WorkOrder workOrder) {
-		ArgumentChecks.isNotNull(workOrder, "Work order cannot be null");
-		StateChecks.isFalse(isSettled(), "Invoice is already settled");
-		ArgumentChecks.isTrue(workOrders.contains(workOrder), "Work order not in invoice");
-		workOrder.uninvoice();
-		Associations.Bills.unlink(workOrder);
-		computeAmount();
-	}
+    public Set<Charge> getCharges() {
+        return new HashSet<>(charges);
+    }
 
-	public boolean isSettled() {
-		return state == InvoiceState.PAID;
-	}
+    // ------------------ Association helpers (package-private)
+    // --------------------------
 
-	/**
-	 * Settles the invoice by charging the specified payment means with the requested amounts.
-	 * The total of the charges must equal the invoice total, and each payment mean must be able to be charged.
-	 * @param requestedCharges A map of payment means and their corresponding amounts to charge.
-	 */
-	public void settle(Map<PaymentMean, Money> requestedCharges) {
-		ArgumentChecks.isNotNull(requestedCharges, "Requested charges cannot be null");
-		ArgumentChecks.isFalse(requestedCharges.isEmpty(), "Requested charges cannot be empty");
-		StateChecks.isFalse(isSettled(), "Invoice is already settled");
-		StateChecks.isTrue(total.greaterThan(Money.ZERO), "Zero-total invoice cannot be settled");
+    Set<WorkOrder> _getWorkOrders() {
+        return workOrders;
+    }
 
-		Map<PaymentMean, Money> normalized = normalize(requestedCharges);
-		Money chargesSum = chargesTotal(normalized);
-		StateChecks.isTrue(total.equals(chargesSum), "Charges total must match invoice total");
+    Set<Charge> _getCharges() {
+        return charges;
+    }
 
-		for (Map.Entry<PaymentMean, Money> entry : normalized.entrySet()) {
-			StateChecks.isTrue(entry.getKey().canBeCharged(entry.getValue()), "Payment mean cannot accept charge");
-		}
+    // ---- Business methods --------------------------------------------
 
-		for (Map.Entry<PaymentMean, Money> entry : normalized.entrySet()) {
-			new Charge(this, entry.getKey(), entry.getValue());
-		}
+    /**
+     * Adds a work order to the invoice. The work order must be approved and the
+     * invoice must not be settled.
+     * 
+     * @param workOrder
+     */
+    public void addWorkOrder(WorkOrder workOrder) {
+        ArgumentChecks.isNotNull(workOrder, "Work order cannot be null");
+        StateChecks.isFalse(isSettled(), "Invoice is already settled");
+        StateChecks.isTrue(workOrder.isApproved(), "Work order must be approved");
+        Associations.Bills.link(this, workOrder);
+        workOrder.invoice();
+        computeAmount();
+    }
 
-		this.state = InvoiceState.PAID;
-	}
+    /**
+     * Removes a work order from the invoice. The invoice must not be settled.
+     * 
+     * @param workOrder
+     */
+    public void removeWorkOrder(WorkOrder workOrder) {
+        ArgumentChecks.isNotNull(workOrder, "Work order cannot be null");
+        StateChecks.isFalse(isSettled(), "Invoice is already settled");
+        ArgumentChecks.isTrue(workOrders.contains(workOrder), "Work order not in invoice");
+        workOrder.uninvoice();
+        Associations.Bills.unlink(workOrder);
+        computeAmount();
+    }
 
-	public void unSettle() {
-		StateChecks.isTrue(isSettled(), "Invoice is not settled");
+    public boolean isSettled() {
+        return state == InvoiceState.PAID;
+    }
 
-		new HashSet<>(charges).forEach(Charge::rewind);
-		state = InvoiceState.ISSUED;
-	}
+    /**
+     * Settles the invoice by charging the specified payment means with the
+     * requested amounts. The total of the charges must equal the invoice total, and
+     * each payment mean must be able to be charged.
+     * 
+     * @param requestedCharges A map of payment means and their corresponding
+     *                         amounts to charge.
+     */
+    public void settle(Map<PaymentMean, Money> requestedCharges) {
+        ArgumentChecks.isNotNull(requestedCharges, "Requested charges cannot be null");
+        ArgumentChecks.isFalse(requestedCharges.isEmpty(), "Requested charges cannot be empty");
+        StateChecks.isFalse(isSettled(), "Invoice is already settled");
+        StateChecks.isTrue(total.greaterThan(Money.ZERO), "Zero-total invoice cannot be settled");
 
-	// ---- Calculation ----
-	private void computeAmount() {
-		Money.MoneyCalculator calc = Money.calc();
-		for (WorkOrder wo : workOrders) {
-			calc.add(wo.getAmount());
-		}
-		this.subtotal = calc.toMoneyRoundedToCents();
-		this.vatRate = getApplicableVatRate();
-		this.vatAmount = Money.calc(this.subtotal).times(this.vatRate.asRatio()).toMoneyRoundedToCents();
-		this.total = Money.calc(this.subtotal).add(this.vatAmount).toMoneyRoundedToCents();
-	}
+        Map<PaymentMean, Money> normalized = normalize(requestedCharges);
+        Money chargesSum = chargesTotal(normalized);
+        StateChecks.isTrue(total.equals(chargesSum), "Charges total must match invoice total");
 
-	private Map<PaymentMean, Money> normalize(Map<PaymentMean, Money> requestedCharges) {
-		Map<PaymentMean, Money> result = new LinkedHashMap<>();
-		requestedCharges.forEach((paymentMean, amount) -> {
-			ArgumentChecks.isNotNull(paymentMean, "Payment mean cannot be null");
-			ArgumentChecks.isNotNull(amount, "Charge amount cannot be null");
-			Money normalizedAmount = Money.calc(amount).toMoneyRoundedToCents();
-			ArgumentChecks.isTrue(normalizedAmount.greaterThan(Money.ZERO), "Charge amount must be positive");
-			result.put(paymentMean, normalizedAmount);
-		});
-		return result;
-	}
+        for (Map.Entry<PaymentMean, Money> entry : normalized.entrySet()) {
+            StateChecks.isTrue(entry.getKey().canBeCharged(entry.getValue()), "Payment mean cannot accept charge");
+        }
 
-	private Money chargesTotal(Map<PaymentMean, Money> requestedCharges) {
-		Money.MoneyCalculator calculator = Money.calc();
-		requestedCharges.values().forEach(calculator::add);
-		return calculator.toMoneyRoundedToCents();
-	}
+        for (Map.Entry<PaymentMean, Money> entry : normalized.entrySet()) {
+            new Charge(this, entry.getKey(), entry.getValue());
+        }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null || getClass() != obj.getClass()) return false;
-		Invoice other = (Invoice) obj;
-		return number == other.number;
-	}
+        this.state = InvoiceState.PAID;
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(number);
-	}
+    public void unSettle() {
+        StateChecks.isTrue(isSettled(), "Invoice is not settled");
 
-	@Override
-	public String toString() {
-		return "Invoice [number=" + number + ", date=" + date + ", state=" + state + ", total=" + total + "]";
-	}
+        new HashSet<>(charges).forEach(Charge::rewind);
+        state = InvoiceState.ISSUED;
+    }
+
+    // ---- Calculation ----
+    private void computeAmount() {
+        Money.MoneyCalculator calc = Money.calc();
+        for (WorkOrder wo : workOrders) {
+            calc.add(wo.getAmount());
+        }
+        this.subtotal = calc.toMoneyRoundedToCents();
+        this.vatRate = getApplicableVatRate();
+        this.vatAmount = Money.calc(this.subtotal).times(this.vatRate.asRatio()).toMoneyRoundedToCents();
+        this.total = Money.calc(this.subtotal).add(this.vatAmount).toMoneyRoundedToCents();
+    }
+
+    private Map<PaymentMean, Money> normalize(Map<PaymentMean, Money> requestedCharges) {
+        Map<PaymentMean, Money> result = new LinkedHashMap<>();
+        requestedCharges.forEach((paymentMean, amount) -> {
+            ArgumentChecks.isNotNull(paymentMean, "Payment mean cannot be null");
+            ArgumentChecks.isNotNull(amount, "Charge amount cannot be null");
+            Money normalizedAmount = Money.calc(amount).toMoneyRoundedToCents();
+            ArgumentChecks.isTrue(normalizedAmount.greaterThan(Money.ZERO), "Charge amount must be positive");
+            result.put(paymentMean, normalizedAmount);
+        });
+        return result;
+    }
+
+    private Money chargesTotal(Map<PaymentMean, Money> requestedCharges) {
+        Money.MoneyCalculator calculator = Money.calc();
+        requestedCharges.values().forEach(calculator::add);
+        return calculator.toMoneyRoundedToCents();
+    }
+
+    @Override
+    public String toString() {
+        return "Invoice [number=" + number + ", date=" + date + ", state=" + state + ", total=" + total + "]";
+    }
 
 }

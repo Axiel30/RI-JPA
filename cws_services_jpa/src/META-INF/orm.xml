@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_1.xsd"
+	version="3.1">
+
+	<persistence-unit-metadata>
+		<persistence-unit-defaults>
+			<entity-listeners>
+				<entity-listener class="uo.ri.cws.infrastructure.persistence.jpa.util.EntityListener" />
+			</entity-listeners>
+		</persistence-unit-defaults>
+	</persistence-unit-metadata>
+
+	<!--  Vehicle queries  -->
+	<named-query name="Vehicle.findByPlate">
+		<query>select v from Vehicle v where v.licensePlate = ?1</query>
+	</named-query>
+	
+	<!--  WorkOrder queries  -->
+	<named-query name="WorkOrder.findByIds">
+		<query>select w from WorkOrder w where w.id in ?1</query>
+	</named-query>
+
+	<named-query name="WorkOrder.findNotInvoicedByClientNif">
+		<query>
+			select w 
+			from WorkOrder w 
+			where w.vehicle.client.nif = ?1 
+			  and w.state = uo.ri.cws.domain.WorkOrder.WorkOrderState.APPROVED
+		</query>
+	</named-query>
+	
+	<!--  PaymentMean queries  -->
+	<named-query name="PaymentMean.findByInvoiceId">
+		<query>
+			select m 
+			from Invoice f 
+				join f.workOrders w 
+				join w.vehicle.client c 
+				join c.paymentMeans m 
+			where f.id = ?1
+		</query>
+	</named-query>
+
+	<named-query name="PaymentMean.findByClientNif">
+		<query>select pm from PaymentMean pm where pm.client.nif = ?1</query>
+	</named-query>
+
+	<named-query name="PaymentMean.findVouchersByClientNif">
+		<query>select v from Voucher v where v.client.nif = ?1</query>
+	</named-query>
+
+	<named-query name="PaymentMean.findVoucherByCode">
+		<query>select v from Voucher v where v.code = ?1</query>
+	</named-query>
+
+	<named-query name="PaymentMean.findCreditCardByNumber">
+		<query>select c from CreditCard c where c.number = ?1</query>
+	</named-query>
+
+	<named-query name="PaymentMean.findByIds">
+		<query>select pm from PaymentMean pm where pm.id in ?1</query>
+	</named-query>
+
+	<named-query name="PaymentMean.countCharges">
+		<query>select count(c) from Charge c where c.paymentMean.id = ?1</query>
+	</named-query>
+
+	<!--  Voucher queries  -->
+	<named-query name="Voucher.summary">
+		<query>
+			select v.client.nif.nif, v.client.fullName.name, v.client.fullName.surname, 
+			       count(v), 
+			       sum(v.accumulated.amount), 
+			       sum(v.availableAmount.amount)
+			from Voucher v
+			group by v.client.nif.nif, v.client.fullName.name, v.client.fullName.surname
+			order by sum(v.availableAmount.amount) desc
+		</query>
+	</named-query>
+	
+	<!--  Mechanic queries  -->
+	<named-query name="Mechanic.findByNif">
+		<query> select m from Mechanic m where m.nif = ?1 </query>
+	</named-query>
+
+	<named-query name="Mechanic.countInterventions">
+		<query>select count(i) from Intervention i where i.mechanic.id = ?1</query>
+	</named-query>
+	
+	<!--  Invoice queries  -->
+	<named-query name="Invoice.findByNumber">
+		<query>select f from Invoice f where f.number = ?1</query>
+	</named-query>
+
+	<named-query name="Invoice.findOverAmountUnusedForVoucher">
+		<query>
+			<![CDATA[
+			select i 
+			from Invoice i 
+			where i.total.amount > ?1 
+			  and i.usedForVoucher = false 
+			  and i.state = uo.ri.cws.domain.Invoice.InvoiceState.PAID
+			]]>
+		</query>
+	</named-query>
+	
+	<named-query name="Invoice.getNextInvoiceNumber">
+		<query> 
+			select cast( coalesce(max(f.number) + 1, 1L) as bigint ) 
+			from Invoice f 
+		</query>
+	</named-query>
+
+	<!--  Client queries  -->
+	<named-query name="Client.findByNif">
+		<query>select c from Client c where c.nif = ?1</query>
+	</named-query>
+
+	<named-query name="Client.findRecommendedBy">
+		<query>select r.recommended from Recommendation r where r.recommender.nif = ?1</query>
+	</named-query>
+
+	<named-query name="Client.findWithWorkOrdersUnusedForVoucher">
+		<query>
+			select distinct c from Client c join c.vehicles v join v.workOrders wo
+			where wo.usedForVoucher = false and wo.state = uo.ri.cws.domain.WorkOrder.WorkOrderState.INVOICED
+			group by c
+			having count(wo) >= ?1
+		</query>
+	</named-query>
+
+	<named-query name="Client.findWithRecommendationsUnusedForVoucher">
+		<query>
+			select distinct c from Client c join c.recommendations r
+			where r.usedForVoucher = false
+			group by c
+			having count(r) >= ?1
+		</query>
+	</named-query>
+
+	<named-query name="Client.hasPaidInvoices">
+		<query>
+			select count(distinct i)
+			from Invoice i 
+			  join i.workOrders wo 
+			  join wo.vehicle v 
+			  join v.client c 
+			where c.id = ?1 
+			  and i.state = uo.ri.cws.domain.Invoice.InvoiceState.PAID
+		</query>
+	</named-query>
+
+</entity-mappings>

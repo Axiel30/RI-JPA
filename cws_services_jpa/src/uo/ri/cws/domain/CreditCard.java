@@ -2,19 +2,35 @@ package uo.ri.cws.domain;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.Objects;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import uo.ri.cws.domain.types.CreditCardNumber;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.util.assertion.ArgumentChecks;
 
+@Entity
+@Table(name = "TCREDITCARDS")
+@DiscriminatorValue("CreditCard")
 public class CreditCard extends PaymentMean {
 
+	@Embedded
+	@AttributeOverride(name = "number", column = @Column(name = "NUMBER", unique = true))
 	private CreditCardNumber number;
+
+    @Column(name = "TYPE")
     private String type;
+
+    @Column(name = "VALIDTHRU")
     private LocalDate validThru;
 
     // ---- Constructors ----
+    protected CreditCard() {}
+
     public CreditCard(CreditCardNumber number) {
         this(number, "UNKNOWN", YearMonth.now().plusMonths(1));
     }
@@ -54,19 +70,6 @@ public class CreditCard extends PaymentMean {
     public boolean canBeCharged(Money amount) {
     	checkPositive(amount);
     	return isValidNow();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        CreditCard other = (CreditCard) obj;
-        return Objects.equals(number, other.number);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(number);
     }
 
     @Override
