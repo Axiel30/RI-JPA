@@ -185,4 +185,29 @@ public class Client extends BaseEntity {
     public String toString() {
         return "Client[nif=" + nif + ", name=" + fullName + "]";
     }
+
+    public void setNif(Nif nif) {
+        ArgumentChecks.isNotNull(nif, "NIF must not be null");
+        this.nif = nif;
+    }
+
+    public void setFullName(FullName fullName) {
+        ArgumentChecks.isNotNull(fullName, "Full name must not be null");
+        this.fullName = fullName;
+    }
+
+    public void setEmail(Email email) {
+        ArgumentChecks.isNotNull(email, "Email must not be null");
+        this.email = email;
+    }
+
+    public void setPhone(PhoneNumber phone) {
+        ArgumentChecks.isNotNull(phone, "Phone must not be null");
+        this.phone = phone;
+    }
+
+    public void setAddress(Address address) {
+        ArgumentChecks.isNotNull(address, "Address must not be null");
+        this.address = address;
+    }
 }
