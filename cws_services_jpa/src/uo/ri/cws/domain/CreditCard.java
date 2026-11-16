@@ -2,30 +2,16 @@ package uo.ri.cws.domain;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import uo.ri.cws.domain.types.CreditCardNumber;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.util.assertion.ArgumentChecks;
 
-@Entity
-@Table(name = "TCREDITCARDS")
-@DiscriminatorValue("CreditCard")
 public class CreditCard extends PaymentMean {
 
-	@Embedded
-	@AttributeOverride(name = "number", column = @Column(name = "NUMBER", unique = true))
 	private CreditCardNumber number;
 
-    @Column(name = "TYPE")
     private String type;
 
-    @Column(name = "VALIDTHRU")
     private LocalDate validThru;
 
     // ---- Constructors ----

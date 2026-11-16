@@ -4,14 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.cws.domain.types.Address;
 import uo.ri.cws.domain.types.Email;
@@ -21,46 +13,26 @@ import uo.ri.cws.domain.types.PhoneNumber;
 import uo.ri.util.assertion.ArgumentChecks;
 import uo.ri.util.assertion.StateChecks;
 
-@Entity
-@Table(name = "TCLIENTS")
 public class Client extends BaseEntity {
 
     // Natural attributes
-    @Embedded
-    @AttributeOverride(name = "nif", column = @Column(name = "NIF", unique = true))
     private Nif nif;
 
-    @Embedded
-    @AttributeOverride(name = "name", column = @Column(name = "NAME"))
-    @AttributeOverride(name = "surname", column = @Column(name = "SURNAME"))
     private FullName fullName;
 
-    @Embedded
-    @AttributeOverride(name = "email", column = @Column(name = "EMAIL"))
     private Email email;
 
-    @Embedded
-    @AttributeOverride(name = "phone", column = @Column(name = "PHONE"))
     private PhoneNumber phone;
 
-    @Embedded
-    @AttributeOverride(name = "street", column = @Column(name = "STREET"))
-    @AttributeOverride(name = "city", column = @Column(name = "CITY"))
-    @AttributeOverride(name = "country", column = @Column(name = "COUNTRY"))
-    @AttributeOverride(name = "postalCode", column = @Column(name = "POSTALCODE"))
     private Address address;
 
     // Accidental attributes
-    @OneToMany(mappedBy = "client")
     private Set<Vehicle> vehicles = new HashSet<>();
 
-    @OneToMany(mappedBy = "client")
     private Set<PaymentMean> paymentMeans = new HashSet<>();
 
-    @OneToMany(mappedBy = "recommender")
     private Set<Recommendation> recommendations = new HashSet<>();
 
-    @OneToOne(mappedBy = "recommended")
     private Recommendation recommendation;
 
     // ---- Constructors ----
@@ -186,28 +158,16 @@ public class Client extends BaseEntity {
         return "Client[nif=" + nif + ", name=" + fullName + "]";
     }
 
-    public void setNif(Nif nif) {
+    public void updatePersonalData(Nif nif, FullName fullName, Email email, PhoneNumber phone, Address address) {
         ArgumentChecks.isNotNull(nif, "NIF must not be null");
-        this.nif = nif;
-    }
-
-    public void setFullName(FullName fullName) {
         ArgumentChecks.isNotNull(fullName, "Full name must not be null");
-        this.fullName = fullName;
-    }
-
-    public void setEmail(Email email) {
         ArgumentChecks.isNotNull(email, "Email must not be null");
-        this.email = email;
-    }
-
-    public void setPhone(PhoneNumber phone) {
         ArgumentChecks.isNotNull(phone, "Phone must not be null");
-        this.phone = phone;
-    }
-
-    public void setAddress(Address address) {
         ArgumentChecks.isNotNull(address, "Address must not be null");
+        this.nif = nif;
+        this.fullName = fullName;
+        this.email = email;
+        this.phone = phone;
         this.address = address;
     }
 }

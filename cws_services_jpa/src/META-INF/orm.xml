@@ -6,13 +6,16 @@
 
 	<persistence-unit-metadata>
 		<persistence-unit-defaults>
+			<access>FIELD</access>
 			<entity-listeners>
 				<entity-listener class="uo.ri.cws.infrastructure.persistence.jpa.util.EntityListener" />
 			</entity-listeners>
 		</persistence-unit-defaults>
 	</persistence-unit-metadata>
 
-	<!--  Vehicle queries  -->
+	<access>FIELD</access>
+
+<!--  Vehicle queries  -->
 	<named-query name="Vehicle.findByPlate">
 		<query>select v from Vehicle v where v.licensePlate = ?1</query>
 	</named-query>
@@ -151,5 +154,466 @@
 			  and i.state = uo.ri.cws.domain.Invoice.InvoiceState.PAID
 		</query>
 	</named-query>
+
+	<!-- ==================================================================== -->
+	<!-- Mapped Superclass                                                    -->
+	<!-- ==================================================================== -->
+	<mapped-superclass class="uo.ri.cws.domain.base.BaseEntity">
+		<pre-update method-name="preUpdate" />
+		<attributes>
+			<id name="id">
+				<column name="ID" />
+			</id>
+			<basic name="createdAt">
+				<column name="CREATEDAT" />
+			</basic>
+			<basic name="updatedAt">
+				<column name="UPDATEDAT" />
+			</basic>
+			<basic name="entityState">
+				<column name="ENTITYSTATE" />
+				<enumerated>STRING</enumerated>
+			</basic>
+			<version name="version">
+				<column name="VERSION" />
+			</version>
+		</attributes>
+	</mapped-superclass>
+
+	<!-- ==================================================================== -->
+	<!-- Entities                                                             -->
+	<!-- ==================================================================== -->
+	<entity class="uo.ri.cws.domain.Cash">
+		<table name="TCASHES" />
+		<discriminator-value>Cash</discriminator-value>
+		<attributes />
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Charge">
+		<table name="TCHARGES">
+			<unique-constraint>
+				<column-name>INVOICE_ID</column-name>
+				<column-name>PAYMENTMEAN_ID</column-name>
+			</unique-constraint>
+		</table>
+		<attributes>
+			<many-to-one name="invoice">
+				<join-column name="INVOICE_ID" />
+			</many-to-one>
+			<many-to-one name="paymentMean">
+				<join-column name="PAYMENTMEAN_ID" />
+			</many-to-one>
+			<embedded name="amount">
+				<attribute-override name="amount">
+					<column name="CHARGE" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Client">
+		<table name="TCLIENTS" />
+		<attributes>
+			<one-to-many name="vehicles" mapped-by="client" />
+			<one-to-many name="paymentMeans" mapped-by="client" />
+			<one-to-many name="recommendations" mapped-by="recommender" />
+			<one-to-one name="recommendation" mapped-by="recommended" />
+			<embedded name="nif">
+				<attribute-override name="nif">
+					<column name="NIF" unique="true" />
+				</attribute-override>
+			</embedded>
+			<embedded name="fullName">
+				<attribute-override name="name">
+					<column name="NAME" />
+				</attribute-override>
+				<attribute-override name="surname">
+					<column name="SURNAME" />
+				</attribute-override>
+			</embedded>
+			<embedded name="email">
+				<attribute-override name="email">
+					<column name="EMAIL" />
+				</attribute-override>
+			</embedded>
+			<embedded name="phone">
+				<attribute-override name="phone">
+					<column name="PHONE" />
+				</attribute-override>
+			</embedded>
+			<embedded name="address">
+				<attribute-override name="street">
+					<column name="STREET" />
+				</attribute-override>
+				<attribute-override name="city">
+					<column name="CITY" />
+				</attribute-override>
+				<attribute-override name="country">
+					<column name="COUNTRY" />
+				</attribute-override>
+				<attribute-override name="postalCode">
+					<column name="POSTALCODE" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.CreditCard">
+		<table name="TCREDITCARDS" />
+		<discriminator-value>CreditCard</discriminator-value>
+		<attributes>
+			<basic name="type">
+				<column name="TYPE" />
+			</basic>
+			<basic name="validThru">
+				<column name="VALIDTHRU" />
+			</basic>
+			<embedded name="number">
+				<attribute-override name="number">
+					<column name="NUMBER" unique="true" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Intervention">
+		<table name="TINTERVENTIONS">
+			<unique-constraint>
+				<column-name>MECHANIC_ID</column-name>
+				<column-name>WORKORDER_ID</column-name>
+				<column-name>DATE</column-name>
+			</unique-constraint>
+		</table>
+		<attributes>
+			<basic name="date">
+				<column name="DATE" />
+			</basic>
+			<basic name="minutes">
+				<column name="MINUTES" />
+			</basic>
+			<many-to-one name="workOrder">
+				<join-column name="WORKORDER_ID" />
+			</many-to-one>
+			<many-to-one name="mechanic">
+				<join-column name="MECHANIC_ID" />
+			</many-to-one>
+			<one-to-many name="substitutions" mapped-by="intervention" orphan-removal="true">
+				<cascade>
+					<cascade-all />
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Invoice">
+		<table name="TINVOICES" />
+		<attributes>
+			<basic name="number">
+				<column name="NUMBER" unique="true" />
+			</basic>
+			<basic name="date">
+				<column name="DATE" />
+			</basic>
+			<basic name="state">
+				<column name="STATE" />
+				<enumerated>STRING</enumerated>
+			</basic>
+			<basic name="usedForVoucher">
+				<column name="USEDFORVOUCHER" />
+			</basic>
+			<one-to-many name="workOrders" mapped-by="invoice" />
+			<one-to-many name="charges" mapped-by="invoice" orphan-removal="true">
+				<cascade>
+					<cascade-all />
+				</cascade>
+			</one-to-many>
+			<embedded name="subtotal">
+				<attribute-override name="amount">
+					<column name="SUBTOTAL" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+			<embedded name="vatRate">
+				<attribute-override name="value">
+					<column name="VATRATE" />
+				</attribute-override>
+			</embedded>
+			<embedded name="vatAmount">
+				<attribute-override name="amount">
+					<column name="VATAMOUNT" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+			<embedded name="total">
+				<attribute-override name="amount">
+					<column name="TOTAL" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Mechanic">
+		<table name="TMECHANICS" />
+		<attributes>
+			<one-to-many name="assigned" mapped-by="mechanic" />
+			<embedded name="nif">
+				<attribute-override name="nif">
+					<column name="NIF" unique="true" />
+				</attribute-override>
+			</embedded>
+			<embedded name="fullName">
+				<attribute-override name="name">
+					<column name="NAME" />
+				</attribute-override>
+				<attribute-override name="surname">
+					<column name="SURNAME" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.PaymentMean">
+		<table name="TPAYMENTMEANS" />
+		<inheritance strategy="JOINED" />
+		<attributes>
+			<many-to-one name="client">
+				<join-column name="CLIENT_ID" />
+			</many-to-one>
+			<embedded name="accumulated">
+				<attribute-override name="amount">
+					<column name="ACCUMULATED" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Recommendation">
+		<table name="TRECOMMENDATIONS">
+			<unique-constraint>
+				<column-name>RECOMMENDER_ID</column-name>
+				<column-name>RECOMMENDED_ID</column-name>
+			</unique-constraint>
+		</table>
+		<attributes>
+			<basic name="usedForVoucher">
+				<column name="USEDFORVOUCHER" />
+			</basic>
+			<many-to-one name="recommender">
+				<join-column name="RECOMMENDER_ID" />
+			</many-to-one>
+			<one-to-one name="recommended">
+				<join-column name="RECOMMENDED_ID" unique="true" />
+			</one-to-one>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.SparePart">
+		<table name="TSPAREPARTS" />
+		<attributes>
+			<basic name="code">
+				<column name="CODE" unique="true" />
+			</basic>
+			<basic name="description">
+				<column name="DESCRIPTION" />
+			</basic>
+			<embedded name="unitPrice">
+				<attribute-override name="amount">
+					<column name="PRICE" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Substitution">
+		<table name="TSUBSTITUTIONS">
+			<unique-constraint>
+				<column-name>INTERVENTION_ID</column-name>
+				<column-name>SPAREPART_ID</column-name>
+			</unique-constraint>
+		</table>
+		<attributes>
+			<basic name="quantity">
+				<column name="QUANTITY" />
+			</basic>
+			<many-to-one name="sparePart">
+				<join-column name="SPAREPART_ID" />
+			</many-to-one>
+			<many-to-one name="intervention">
+				<join-column name="INTERVENTION_ID" />
+			</many-to-one>
+			<embedded name="price">
+				<attribute-override name="amount">
+					<column name="PRICE" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Vehicle">
+		<table name="TVEHICLES" />
+		<attributes>
+			<basic name="make">
+				<column name="MAKE" />
+			</basic>
+			<basic name="model">
+				<column name="MODEL" />
+			</basic>
+			<many-to-one name="vehicleType">
+				<join-column name="VEHICLETYPE_ID" />
+			</many-to-one>
+			<many-to-one name="client">
+				<join-column name="CLIENT_ID" />
+			</many-to-one>
+			<one-to-many name="workOrders" mapped-by="vehicle" />
+			<embedded name="licensePlate">
+				<attribute-override name="licensePlate">
+					<column name="LICENSEPLATE" unique="true" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.VehicleType">
+		<table name="TVEHICLETYPES" />
+		<attributes>
+			<basic name="name">
+				<column name="NAME" unique="true" />
+			</basic>
+			<one-to-many name="vehicles" mapped-by="vehicleType" />
+			<embedded name="pricePerHour">
+				<attribute-override name="amount">
+					<column name="PRICE_PER_HOUR" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.Voucher">
+		<table name="TVOUCHERS" />
+		<discriminator-value>Voucher</discriminator-value>
+		<attributes>
+			<basic name="description">
+				<column name="DESCRIPTION" />
+			</basic>
+			<embedded name="code">
+				<attribute-override name="code">
+					<column name="CODE" unique="true" />
+				</attribute-override>
+			</embedded>
+			<embedded name="availableAmount">
+				<attribute-override name="amount">
+					<column name="AVAILABLE" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<entity class="uo.ri.cws.domain.WorkOrder">
+		<table name="TWORKORDERS">
+			<unique-constraint>
+				<column-name>VEHICLE_ID</column-name>
+				<column-name>DATE</column-name>
+			</unique-constraint>
+		</table>
+		<attributes>
+			<basic name="date">
+				<column name="DATE" />
+			</basic>
+			<basic name="description">
+				<column name="DESCRIPTION" />
+			</basic>
+			<basic name="state">
+				<column name="STATE" />
+				<enumerated>STRING</enumerated>
+			</basic>
+			<basic name="usedForVoucher">
+				<column name="USEDFORVOUCHER" />
+			</basic>
+			<many-to-one name="invoice">
+				<join-column name="INVOICE_ID" />
+			</many-to-one>
+			<many-to-one name="mechanic">
+				<join-column name="MECHANIC_ID" />
+			</many-to-one>
+			<many-to-one name="vehicle">
+				<join-column name="VEHICLE_ID" />
+			</many-to-one>
+			<one-to-many name="interventions" mapped-by="workOrder" orphan-removal="true">
+				<cascade>
+					<cascade-all />
+				</cascade>
+			</one-to-many>
+			<embedded name="amount">
+				<attribute-override name="amount">
+					<column name="TOTAL_AMOUNT" precision="19" scale="2" />
+				</attribute-override>
+			</embedded>
+		</attributes>
+	</entity>
+
+	<!-- ==================================================================== -->
+	<!-- Embeddables                                                          -->
+	<!-- ==================================================================== -->
+	<embeddable class="uo.ri.cws.domain.types.Address">
+		<attributes>
+			<basic name="street" />
+			<basic name="city" />
+			<basic name="country" />
+			<basic name="postalCode" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.CreditCardNumber">
+		<attributes>
+			<basic name="number" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.Email">
+		<attributes>
+			<basic name="email" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.FullName">
+		<attributes>
+			<basic name="name" />
+			<basic name="surname" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.LicensePlate">
+		<attributes>
+			<basic name="licensePlate" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.Money">
+		<attributes>
+			<basic name="amount" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.Nif">
+		<attributes>
+			<basic name="nif" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.Percentage">
+		<attributes>
+			<basic name="value" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.PhoneNumber">
+		<attributes>
+			<basic name="phone" />
+		</attributes>
+	</embeddable>
+
+	<embeddable class="uo.ri.cws.domain.types.VoucherCode">
+		<attributes>
+			<basic name="code" />
+		</attributes>
+	</embeddable>
 
 </entity-mappings>

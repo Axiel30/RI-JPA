@@ -27,8 +27,8 @@ public class GenerateVouchers implements Command<int[]> {
         // Generar vales de 25€ (recomendaciones)
         int count25 = 0;
 
-        List<Client> clients = clientRepo.findAll();
-        for (Client client : clients) {
+        List<Client> clientsWithRecs = clientRepo.findWithRecommendationsUnusedForVoucher(3);
+        for (Client client : clientsWithRecs) {
             while (client.isEligibleForVoucher25()) {
                 Voucher voucher = new Voucher(new VoucherCode("V-" + UUID.randomUUID()), "Por recomendación",
                     Money.of("25.00"));
@@ -41,7 +41,8 @@ public class GenerateVouchers implements Command<int[]> {
 
         // Generar vales de 20€ (órdenes de trabajo)
         int count20 = 0;
-        for (Client client : clients) {
+        List<Client> clientsWithWorkOrders = clientRepo.findWithWorkOrdersUnusedForVoucher(3);
+        for (Client client : clientsWithWorkOrders) {
             while (client.getWorkOrdersAvailableForVoucher20().size() >= 3) {
                 Voucher voucher = new Voucher(new VoucherCode("V-" + UUID.randomUUID()), "Por tres órdenes de trabajo",
                     Money.of("20.00"));

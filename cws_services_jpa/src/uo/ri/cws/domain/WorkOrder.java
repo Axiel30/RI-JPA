@@ -6,26 +6,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.util.assertion.ArgumentChecks;
 import uo.ri.util.assertion.StateChecks;
 
-@Entity
-@Table(name = "TWORKORDERS", uniqueConstraints = { @UniqueConstraint(columnNames = { "VEHICLE_ID", "DATE" }) })
 public class WorkOrder extends BaseEntity {
 
     public enum WorkOrderState {
@@ -33,37 +18,23 @@ public class WorkOrder extends BaseEntity {
     }
 
     // Natural attributes
-    @Column(name = "DATE")
     private LocalDateTime date;
 
-    @Column(name = "DESCRIPTION")
     private String description;
 
-    @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "TOTAL_AMOUNT", precision = 19, scale = 2))
     private Money amount = Money.ZERO; // cents
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "STATE")
     private WorkOrderState state = WorkOrderState.OPEN;
 
-    @Column(name = "USEDFORVOUCHER")
     private boolean usedForVoucher = false;
 
     // Accidental attributes
-    @ManyToOne
-    @JoinColumn(name = "INVOICE_ID")
     private Invoice invoice;
 
-    @ManyToOne
-    @JoinColumn(name = "MECHANIC_ID")
     private Mechanic mechanic;
 
-    @ManyToOne
-    @JoinColumn(name = "VEHICLE_ID")
     private Vehicle vehicle;
 
-    @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Intervention> interventions = new HashSet<>();
 
     // ---- Constructors ----

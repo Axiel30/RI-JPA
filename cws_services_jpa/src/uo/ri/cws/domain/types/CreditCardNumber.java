@@ -1,11 +1,8 @@
 package uo.ri.cws.domain.types;
 
 import java.util.Objects;
-
-import jakarta.persistence.Embeddable;
 import uo.ri.util.assertion.ArgumentChecks;
 
-@Embeddable
 public record CreditCardNumber(String number) {
 
     public CreditCardNumber {

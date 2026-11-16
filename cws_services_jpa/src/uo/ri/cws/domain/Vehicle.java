@@ -2,45 +2,25 @@ package uo.ri.cws.domain;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import uo.ri.cws.domain.base.BaseEntity;
 import uo.ri.cws.domain.types.LicensePlate;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.util.assertion.ArgumentChecks;
 
-@Entity
-@Table(name = "TVEHICLES")
 public class Vehicle extends BaseEntity {
 
 	// Natural attributes
-	@Embedded
-	@AttributeOverride(name = "licensePlate", column = @Column(name = "LICENSEPLATE", unique = true))
 	private LicensePlate licensePlate;
 
-	@Column(name = "MAKE")
 	private String make;
 
-	@Column(name = "MODEL")
 	private String model;
 	
 	// Accidental attributes
-	@ManyToOne
-	@JoinColumn(name = "VEHICLETYPE_ID")
 	private VehicleType vehicleType;
 
-	@ManyToOne
-	@JoinColumn(name = "CLIENT_ID")
 	private Client client;
 
-	@OneToMany(mappedBy = "vehicle")
 	private Set<WorkOrder> workOrders = new HashSet<>();
 
 	// ---- Constructors ----

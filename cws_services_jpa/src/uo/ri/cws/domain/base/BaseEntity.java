@@ -2,16 +2,6 @@ package uo.ri.cws.domain.base;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Version;
-
-@MappedSuperclass
 public abstract class BaseEntity {
 
 	public enum EntityState {
@@ -19,22 +9,14 @@ public abstract class BaseEntity {
 		DISABLED // soft deleted
 	};
 	
-	@Id 
-	@Column(name = "ID")
 	private String id = UUID.randomUUID().toString();
 	
-	@Column(name = "CREATEDAT")
 	private LocalDateTime createdAt = LocalDateTime.now(); 
 	
-	@Column(name = "UPDATEDAT")
 	private LocalDateTime updatedAt = createdAt;
 	
-	@Enumerated(EnumType.STRING)
-	@Column(name = "ENTITYSTATE")
 	private EntityState entityState = EntityState.ENABLED;
 	
-	@Version
-	@Column(name = "VERSION")
 	private long version = 1;
 	
 	public String getId() {
@@ -83,7 +65,6 @@ public abstract class BaseEntity {
 		return true;
 	}
 
-	@PreUpdate
 	public void preUpdate() {
 		updatedNow();
 	}

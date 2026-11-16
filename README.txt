@@ -64,5 +64,14 @@ LISTA DE AMPLIACIONES REALIZADAS
    - CRUD completo de mecánicos (MechanicCrudService): AddMechanic, DeleteMechanic,
      UpdateMechanic, FindAllMechanics, FindMechanicById y FindMechanicByNif.
 
+7. Externalización completa del mapeo objeto-relacional a XML (orm.xml):
+   - Se han migrado todas las anotaciones JPA de las clases de dominio (@Entity, @Table,
+     @Id, @Version, @Column, @Embedded, @AttributeOverride, @Enumerated, @ManyToOne,
+     @OneToMany, @OneToOne, @JoinColumn, @DiscriminatorValue, @MappedSuperclass,
+     @Embeddable, @PreUpdate) al archivo META-INF/orm.xml.
+   - Las clases de dominio (entidades, tipos de valor/embeddables y superclases mapeadas)
+     quedan como POJOs puros desacoplados por completo de jakarta.persistence,
+     cumpliendo los principios de diseño y arquitectura limpia.
+
 TIEMPO DE TRABAJO AUTÓNOMO DEDICADO
 Aproximadamente 15 horas.

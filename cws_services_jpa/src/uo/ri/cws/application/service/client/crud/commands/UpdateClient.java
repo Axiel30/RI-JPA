@@ -58,12 +58,10 @@ public class UpdateClient implements Command<Void> {
                     "Another client already has NIF " + dto.nif);
         }
 
-        client.setNif(newNif);
-        client.setFullName(new FullName(dto.name, dto.surname));
-        client.setEmail(new Email(dto.email));
-        client.setPhone(new PhoneNumber(dto.phone));
-        client.setAddress(new Address(dto.addressStreet, dto.addressCity,
-                dto.addressCountry, dto.addressZipcode));
+        client.updatePersonalData(newNif, new FullName(dto.name, dto.surname),
+                new Email(dto.email), new PhoneNumber(dto.phone),
+                new Address(dto.addressStreet, dto.addressCity,
+                        dto.addressCountry, dto.addressZipcode));
 
         return null;
     }

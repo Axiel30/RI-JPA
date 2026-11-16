@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Objects;
-
-import jakarta.persistence.Embeddable;
 import uo.ri.util.assertion.ArgumentChecks;
 
 /**
@@ -23,7 +21,6 @@ import uo.ri.util.assertion.ArgumentChecks;
  * Terminal methods: toMoneyExact(), toMoneyRoundedToCents()
  * Lossless split  : allocate(n) — e.g. €10.00 into 3 -> [€3.34, €3.33, €3.33]
  */
-@Embeddable
 public record Money(BigDecimal amount) implements Comparable<Money> {
 
 	private static final MathContext NON_TERMINATING_DIVISION_CONTEXT = MathContext.DECIMAL128;

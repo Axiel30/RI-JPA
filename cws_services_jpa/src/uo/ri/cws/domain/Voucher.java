@@ -1,30 +1,15 @@
 package uo.ri.cws.domain;
-
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import uo.ri.cws.domain.types.Money;
 import uo.ri.cws.domain.types.VoucherCode;
 import uo.ri.util.assertion.ArgumentChecks;
 import uo.ri.util.assertion.StateChecks;
 
-@Entity
-@Table(name = "TVOUCHERS")
-@DiscriminatorValue("Voucher")
 public class Voucher extends PaymentMean {
 
-    @Embedded
-    @AttributeOverride(name = "code", column = @Column(name = "CODE", unique = true))
     private VoucherCode code;
 
-    @Column(name = "DESCRIPTION")
     private String description;
 
-    @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "AVAILABLE", precision = 19, scale = 2))
     private Money availableAmount; // cents
 
     // ---- Constructors ----

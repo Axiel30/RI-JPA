@@ -41,8 +41,7 @@ public class UpdateMechanic implements Command<Void> {
         if (byNif.isPresent() && !byNif.get().getId().equals(m.getId())) {
             throw new BusinessException("A mechanic with NIF " + dto.nif + " already exists");
         }
-        m.setNif(newNif);
-        m.setFullName(new FullName(dto.name, dto.surname));
+        m.updatePersonalData(newNif, new FullName(dto.name, dto.surname));
         return null;
     }
 
